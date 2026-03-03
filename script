@@ -2,150 +2,15 @@
 // STATE & DATA MANAGEMENT
 // ========================================
 
+const API_URL = window.location.origin + '/api';
+
 let currentPage = 'home';
 let currentFilter = 'all';
 let uploadedImage = null;
-
-// Mock Users Database
-const users = [
-    {
-        id: 1,
-        username: 'NeonRider',
-        handle: '@neon_rider',
-        avatar: 'https://images.unsplash.com/photo-1684488646170-62c5403733e4',
-        bio: '🎮 Pro Gamer | 🔥 Esports Enthusiast | 💜 Valorant Main',
-        followers: 2400,
-        following: 318,
-        isOnline: true
-    },
-    {
-        id: 2,
-        username: 'Alex_Pro',
-        handle: '@alex_pro',
-        avatar: 'https://images.unsplash.com/photo-1638581777063-bf3ed0496c67',
-        bio: '🏆 Champion Player | Streaming Daily',
-        followers: 1850,
-        following: 245,
-        isOnline: true
-    },
-    {
-        id: 3,
-        username: 'Mia_Stream',
-        handle: '@mia_plays',
-        avatar: 'https://images.unsplash.com/photo-1616702577619-0522a1f8d938',
-        bio: '✨ Content Creator | Mobile Legends Pro',
-        followers: 3200,
-        following: 892,
-        isOnline: false
-    }
-];
-
-// Mock Posts Database
-let posts = [
-    {
-        id: 101,
-        userId: 2,
-        username: 'Alex_Pro',
-        handle: '@alex_pro',
-        avatar: 'https://images.unsplash.com/photo-1638581777063-bf3ed0496c67',
-        content: 'Just won my first tournament! 🏆 The grind never stops. Shoutout to my team! #Valorant #Esports',
-        image: 'https://images.unsplash.com/photo-1642345843526-6279c8880a49',
-        likes: 342,
-        comments: [],
-        shares: 28,
-        timestamp: '2h ago',
-        gameTag: 'Valorant',
-        liked: false
-    },
-    {
-        id: 102,
-        userId: 3,
-        username: 'Mia_Stream',
-        handle: '@mia_plays',
-        avatar: 'https://images.unsplash.com/photo-1616702577619-0522a1f8d938',
-        content: 'Epic comeback in ranked! Down 0-2 and clutched it 3-2! 💪🔥 #MLBB #MobileLegends',
-        image: 'https://images.unsplash.com/photo-1728632286888-04c64f48e506',
-        likes: 189,
-        comments: [],
-        shares: 15,
-        timestamp: '4h ago',
-        gameTag: 'MLBB',
-        liked: false
-    },
-    {
-        id: 103,
-        userId: 1,
-        username: 'NeonRider',
-        handle: '@neon_rider',
-        avatar: 'https://images.unsplash.com/photo-1684488646170-62c5403733e4',
-        content: 'New gaming setup complete! RGB everything 🌈💜 Ready to dominate! #GamingSetup #PCGaming',
-        image: 'https://images.unsplash.com/photo-1688407832489-cc9db90773f5',
-        likes: 456,
-        comments: [],
-        shares: 42,
-        timestamp: '6h ago',
-        gameTag: 'League of Legends',
-        liked: false
-    },
-    {
-        id: 104,
-        userId: 2,
-        username: 'Alex_Pro',
-        handle: '@alex_pro',
-        avatar: 'https://images.unsplash.com/photo-1638581777063-bf3ed0496c67',
-        content: 'Anyone up for some late night ranked matches? Looking for a squad! 🎮 #CODMobile #TeamUp',
-        image: null,
-        likes: 67,
-        comments: [],
-        shares: 8,
-        timestamp: '8h ago',
-        gameTag: 'COD Mobile',
-        liked: false
-    },
-    {
-        id: 105,
-        userId: 3,
-        username: 'Mia_Stream',
-        handle: '@mia_plays',
-        avatar: 'https://images.unsplash.com/photo-1616702577619-0522a1f8d938',
-        content: 'Streaming in 30 minutes! Come hang out and let\'s push to Diamond together! 💎✨ #LiveStream #ApexLegends',
-        image: null,
-        likes: 234,
-        comments: [],
-        shares: 19,
-        timestamp: '12h ago',
-        gameTag: 'Apex Legends',
-        liked: false
-    }
-];
-
-// Mock Notifications
-const notifications = [
-    {
-        id: 1,
-        type: 'like',
-        user: 'Alex_Pro',
-        avatar: 'https://images.unsplash.com/photo-1638581777063-bf3ed0496c67',
-        text: 'liked your post',
-        time: '5m ago'
-    },
-    {
-        id: 2,
-        type: 'follow',
-        user: 'Mia_Stream',
-        avatar: 'https://images.unsplash.com/photo-1616702577619-0522a1f8d938',
-        text: 'started following you',
-        time: '1h ago'
-    },
-    {
-        id: 3,
-        type: 'comment',
-        user: 'Alex_Pro',
-        avatar: 'https://images.unsplash.com/photo-1638581777063-bf3ed0496c67',
-        text: 'commented on your post',
-        time: '2h ago'
-    }
-];
+let posts = [];
+let users = [];
+let notifications = [];
+let currentUser = null;
 
 // ========================================
 // INITIALIZATION
@@ -155,10 +20,58 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
 });
 
-function initializeApp() {
-    renderFeed();
-    setupEventListeners();
-    renderNotifications();
+async function initializeApp() {
+    try {
+        await loadCurrentUser();
+        await loadPosts();
+        await loadNotifications();
+        setupEventListeners();
+        renderFeed();
+        renderNotifications();
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+    }
+}
+
+// ========================================
+// API CALLS
+// ========================================
+
+async function loadCurrentUser() {
+    try {
+        const response = await fetch(`${API_URL}/current-user`);
+        currentUser = await response.json();
+    } catch (error) {
+        console.error('Failed to load current user:', error);
+    }
+}
+
+async function loadPosts() {
+    try {
+        const response = await fetch(`${API_URL}/posts`);
+        posts = await response.json();
+    } catch (error) {
+        console.error('Failed to load posts:', error);
+    }
+}
+
+async function loadNotifications() {
+    try {
+        const response = await fetch(`${API_URL}/notifications`);
+        notifications = await response.json();
+    } catch (error) {
+        console.error('Failed to load notifications:', error);
+    }
+}
+
+async function loadUserPosts(userId) {
+    try {
+        const response = await fetch(`${API_URL}/users/${userId}/posts`);
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to load user posts:', error);
+        return [];
+    }
 }
 
 // ========================================
@@ -166,7 +79,6 @@ function initializeApp() {
 // ========================================
 
 function setupEventListeners() {
-    // Navigation
     document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const page = e.currentTarget.dataset.page;
@@ -174,10 +86,8 @@ function setupEventListeners() {
         });
     });
     
-    // Search
     document.getElementById('searchInput').addEventListener('input', handleSearch);
     
-    // Filter pills
     document.querySelectorAll('.pill[data-filter]').forEach(pill => {
         pill.addEventListener('click', (e) => {
             const filter = e.currentTarget.dataset.filter;
@@ -185,20 +95,16 @@ function setupEventListeners() {
         });
     });
     
-    // Create post modal
     document.getElementById('createPostBtn').addEventListener('click', openCreatePostModal);
     document.querySelector('.modal-close').addEventListener('click', closeCreatePostModal);
     document.getElementById('cancelPostBtn').addEventListener('click', closeCreatePostModal);
     document.getElementById('submitPostBtn').addEventListener('click', createPost);
     
-    // Image upload
     document.getElementById('imageUpload').addEventListener('change', handleImageUpload);
     
-    // Notifications
     document.getElementById('notifBtn').addEventListener('click', openNotifications);
     document.getElementById('closeNotifBtn').addEventListener('click', closeNotifications);
     
-    // Close modal on overlay click
     document.getElementById('createPostModal').addEventListener('click', (e) => {
         if (e.target.id === 'createPostModal') {
             closeCreatePostModal();
@@ -213,18 +119,15 @@ function setupEventListeners() {
 function navigateToPage(page) {
     currentPage = page;
     
-    // Update active nav item
     document.querySelectorAll('.nav-item[data-page]').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+    document.querySelector(`.nav-item[data-page=\\"${page}\\"]`).classList.add('active');
     
-    // Hide all sections
     document.getElementById('feedSection').style.display = 'none';
     document.getElementById('profileSection').style.display = 'none';
     document.getElementById('exploreSection').style.display = 'none';
     
-    // Show selected section
     switch(page) {
         case 'home':
             document.getElementById('feedSection').style.display = 'block';
@@ -253,63 +156,61 @@ function renderFeed() {
     
     if (filteredPosts.length === 0) {
         container.innerHTML = `
-            <div class="glass" style="padding: 3rem; text-align: center; border-radius: 16px;">
-                <i class="ph ph-game-controller" style="font-size: 4rem; color: var(--neon-primary); margin-bottom: 1rem;"></i>
-                <h3 style="color: var(--text-secondary); font-size: 1.2rem;">No posts found</h3>
-                <p style="color: var(--text-muted); margin-top: 0.5rem;">Try a different filter or create a new post!</p>
+            <div class=\\"glass\\" style=\\"padding: 3rem; text-align: center; border-radius: 16px;\\">
+                <i class=\\"ph ph-game-controller\\" style=\\"font-size: 4rem; color: var(--neon-primary); margin-bottom: 1rem;\\"></i>
+                <h3 style=\\"color: var(--text-secondary); font-size: 1.2rem;\\">No posts found</h3>
+                <p style=\\"color: var(--text-muted); margin-top: 0.5rem;\\">Try a different filter or create a new post!</p>
             </div>
         `;
         return;
     }
     
     container.innerHTML = filteredPosts.map(post => createPostCard(post)).join('');
-    
-    // Attach event listeners to post actions
     attachPostEventListeners();
 }
 
 function createPostCard(post) {
     return `
-        <div class="post-card" data-post-id="${post.id}" data-testid="post-card-${post.id}">
-            <div class="post-header">
-                <img src="${post.avatar}" alt="${post.username}" class="post-avatar" data-testid="post-avatar">
-                <div class="post-user-info">
-                    <div class="post-username" data-testid="post-username">
+        <div class=\\"post-card\\" data-post-id=\\"${post.id}\\" data-testid=\\"post-card-${post.id}\\">
+            <div class=\\"post-header\\">
+                <img src=\\"${post.avatar}\\" alt=\\"${post.username}\\" class=\\"post-avatar\\" data-testid=\\"post-avatar\\">
+                <div class=\\"post-user-info\\">
+                    <div class=\\"post-username\\" data-testid=\\"post-username\\">
                         ${post.username}
-                        <span class="game-tag ${post.gameTag.toLowerCase().replace(/\s/g, '')}" data-testid="post-game-tag">${post.gameTag}</span>
+                        <span class=\\"game-tag ${post.gameTag.toLowerCase().replace(/\\s/g, '')}\\" data-testid=\\"post-game-tag\\">${post.gameTag}</span>
                     </div>
-                    <div class="post-handle" data-testid="post-handle">${post.handle}</div>
+                    <div class=\\"post-handle\\" data-testid=\\"post-handle\\">${post.handle}</div>
                 </div>
-                <div class="post-timestamp" data-testid="post-timestamp">${post.timestamp}</div>
+                <div class=\\"post-timestamp\\" data-testid=\\"post-timestamp\\">${post.timestamp}</div>
             </div>
-            <div class="post-content">
-                <p class="post-text" data-testid="post-text">${post.content}</p>
-                ${post.image ? `<img src="${post.image}" alt="Post image" class="post-image" data-testid="post-image">` : ''}
+            <div class=\\"post-content\\">
+                <p class=\\"post-text\\" data-testid=\\"post-text\\">${post.content}</p>
+                ${post.image ? `<img src=\\"${post.image}\\" alt=\\"Post image\\" class=\\"post-image\\" data-testid=\\"post-image\\">` : ''}
             </div>
-            <div class="post-actions">
-                <button class="action-btn ${post.liked ? 'liked' : ''}" data-action="like" data-testid="like-btn">
-                    <i class="ph-fill ph-heart"></i>
-                    <span data-testid="like-count">${post.likes}</span>
+            <div class=\\"post-actions\\">
+                <button class=\\"action-btn ${post.liked ? 'liked' : ''}\\" data-action=\\"like\\" data-testid=\\"like-btn\\">
+                    <i class=\\"ph-fill ph-heart\\"></i>
+                    <span data-testid=\\"like-count\\">${post.likes}</span>
                 </button>
-                <button class="action-btn" data-action="comment" data-testid="comment-btn">
-                    <i class="ph ph-chat-circle"></i>
-                    <span data-testid="comment-count">${post.comments.length}</span>
+                <button class=\\"action-btn\\" data-action=\\"comment\\" data-testid=\\"comment-btn\\">
+                    <i class=\\"ph ph-chat-circle\\"></i>
+                    <span data-testid=\\"comment-count\\">${post.comments.length}</span>
                 </button>
-                <button class="action-btn" data-action="share" data-testid="share-btn">
-                    <i class="ph ph-share-network"></i>
-                    <span data-testid="share-count">${post.shares}</span>
+                <button class=\\"action-btn\\" data-action=\\"share\\" data-testid=\\"share-btn\\">
+                    <i class=\\"ph ph-share-network\\"></i>
+                    <span data-testid=\\"share-count\\">${post.shares}</span>
                 </button>
             </div>
-            <div class="comment-section" data-testid="comment-section">
-                <div class="comment-input-wrapper">
-                    <input type="text" class="comment-input" placeholder="Write a comment..." data-testid="comment-input">
-                    <button class="comment-submit" data-testid="comment-submit-btn">Post</button>
+            <div class=\\"comment-section\\" data-testid=\\"comment-section\\">
+                <div class=\\"comment-input-wrapper\\">
+                    <input type=\\"text\\" class=\\"comment-input\\" placeholder=\\"Write a comment...\\" data-testid=\\"comment-input\\">
+                    <button class=\\"comment-submit\\" data-testid=\\"comment-submit-btn\\">Post</button>
                 </div>
-                <div class="comments-list" data-testid="comments-list">
+                <div class=\\"comments-list\\" data-testid=\\"comments-list\\">
                     ${post.comments.map(comment => `
-                        <div class="comment">
-                            <div class="comment-author">${comment.author}</div>
-                            <div class="comment-text">${comment.text}</div>
+                        <div class=\\"comment\\">
+                            <div class=\\"comment-author\\">${comment.author}</div>
+                            <div class=\\"comment-text\\">${comment.text}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -328,7 +229,7 @@ function attachPostEventListeners() {
     });
 }
 
-function handlePostAction(e) {
+async function handlePostAction(e) {
     const button = e.currentTarget;
     const action = button.dataset.action;
     const postCard = button.closest('.post-card');
@@ -337,32 +238,45 @@ function handlePostAction(e) {
     
     if (!post) return;
     
-    switch(action) {
-        case 'like':
-            post.liked = !post.liked;
-            post.likes += post.liked ? 1 : -1;
-            button.classList.toggle('liked');
-            button.querySelector('span').textContent = post.likes;
-            break;
-            
-        case 'comment':
-            const commentSection = postCard.querySelector('.comment-section');
-            commentSection.classList.toggle('active');
-            if (commentSection.classList.contains('active')) {
-                commentSection.querySelector('.comment-input').focus();
-            }
-            break;
-            
-        case 'share':
-            post.shares++;
-            button.querySelector('span').textContent = post.shares;
-            // Could add share functionality here
-            alert('Post shared! (Mock functionality)');
-            break;
+    try {
+        switch(action) {
+            case 'like':
+                post.liked = !post.liked;
+                const likeResponse = await fetch(`${API_URL}/posts/${postId}/like`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({liked: post.liked})
+                });
+                const likeData = await likeResponse.json();
+                post.likes = likeData.likes;
+                button.classList.toggle('liked');
+                button.querySelector('span').textContent = post.likes;
+                break;
+                
+            case 'comment':
+                const commentSection = postCard.querySelector('.comment-section');
+                commentSection.classList.toggle('active');
+                if (commentSection.classList.contains('active')) {
+                    commentSection.querySelector('.comment-input').focus();
+                }
+                break;
+                
+            case 'share':
+                const shareResponse = await fetch(`${API_URL}/posts/${postId}/share`, {
+                    method: 'PUT'
+                });
+                const shareData = await shareResponse.json();
+                post.shares = shareData.shares;
+                button.querySelector('span').textContent = post.shares;
+                alert('Post shared! 🎮');
+                break;
+        }
+    } catch (error) {
+        console.error('Action failed:', error);
     }
 }
 
-function handleCommentSubmit(e) {
+async function handleCommentSubmit(e) {
     const button = e.currentTarget;
     const postCard = button.closest('.post-card');
     const postId = parseInt(postCard.dataset.postId);
@@ -372,30 +286,29 @@ function handleCommentSubmit(e) {
     
     if (!commentText || !post) return;
     
-    // Add comment
-    const comment = {
-        id: Date.now(),
-        author: 'NeonRider',
-        text: commentText,
-        timestamp: 'Just now'
-    };
-    
-    post.comments.push(comment);
-    
-    // Update UI
-    const commentsList = postCard.querySelector('.comments-list');
-    commentsList.innerHTML += `
-        <div class="comment">
-            <div class="comment-author">${comment.author}</div>
-            <div class="comment-text">${comment.text}</div>
-        </div>
-    `;
-    
-    // Update comment count
-    postCard.querySelector('[data-action="comment"] span').textContent = post.comments.length;
-    
-    // Clear input
-    input.value = '';
+    try {
+        const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: commentText})
+        });
+        
+        const newComment = await response.json();
+        post.comments.push(newComment);
+        
+        const commentsList = postCard.querySelector('.comments-list');
+        commentsList.innerHTML += `
+            <div class=\\"comment\\">
+                <div class=\\"comment-author\\">${newComment.author}</div>
+                <div class=\\"comment-text\\">${newComment.text}</div>
+            </div>
+        `;
+        
+        postCard.querySelector('[data-action=\\"comment\\"] span').textContent = post.comments.length;
+        input.value = '';
+    } catch (error) {
+        console.error('Failed to add comment:', error);
+    }
 }
 
 // ========================================
@@ -420,10 +333,10 @@ function handleSearch(e) {
     
     if (filteredPosts.length === 0) {
         container.innerHTML = `
-            <div class="glass" style="padding: 3rem; text-align: center; border-radius: 16px;">
-                <i class="ph ph-magnifying-glass" style="font-size: 4rem; color: var(--neon-secondary); margin-bottom: 1rem;"></i>
-                <h3 style="color: var(--text-secondary); font-size: 1.2rem;">No results found</h3>
-                <p style="color: var(--text-muted); margin-top: 0.5rem;">Try different keywords</p>
+            <div class=\\"glass\\" style=\\"padding: 3rem; text-align: center; border-radius: 16px;\\">
+                <i class=\\"ph ph-magnifying-glass\\" style=\\"font-size: 4rem; color: var(--neon-secondary); margin-bottom: 1rem;\\"></i>
+                <h3 style=\\"color: var(--text-secondary); font-size: 1.2rem;\\">No results found</h3>
+                <p style=\\"color: var(--text-muted); margin-top: 0.5rem;\\">Try different keywords</p>
             </div>
         `;
         return;
@@ -436,11 +349,10 @@ function handleSearch(e) {
 function setFilter(filter) {
     currentFilter = filter;
     
-    // Update active pill
     document.querySelectorAll('.pill').forEach(pill => {
         pill.classList.remove('active');
     });
-    document.querySelector(`.pill[data-filter="${filter}"]`).classList.add('active');
+    document.querySelector(`.pill[data-filter=\\"${filter}\\"]`).classList.add('active');
     
     renderFeed();
 }
@@ -458,7 +370,6 @@ function closeCreatePostModal() {
     document.getElementById('createPostModal').classList.remove('active');
     document.body.style.overflow = '';
     
-    // Reset form
     document.getElementById('postCaption').value = '';
     document.getElementById('gameTagSelect').value = '';
     document.getElementById('imageUpload').value = '';
@@ -475,13 +386,13 @@ function handleImageUpload(e) {
     reader.onload = (event) => {
         uploadedImage = event.target.result;
         const preview = document.getElementById('imagePreview');
-        preview.innerHTML = `<img src="${uploadedImage}" alt="Preview">`;
+        preview.innerHTML = `<img src=\\"${uploadedImage}\\" alt=\\"Preview\\">`;
         preview.classList.add('active');
     };
     reader.readAsDataURL(file);
 }
 
-function createPost() {
+async function createPost() {
     const caption = document.getElementById('postCaption').value.trim();
     const gameTag = document.getElementById('gameTagSelect').value;
     
@@ -495,67 +406,63 @@ function createPost() {
         return;
     }
     
-    // Create new post
-    const newPost = {
-        id: Date.now(),
-        userId: 1,
-        username: 'NeonRider',
-        handle: '@neon_rider',
-        avatar: 'https://images.unsplash.com/photo-1684488646170-62c5403733e4',
-        content: caption,
-        image: uploadedImage,
-        likes: 0,
-        comments: [],
-        shares: 0,
-        timestamp: 'Just now',
-        gameTag: gameTag,
-        liked: false
-    };
-    
-    // Add to beginning of posts array
-    posts.unshift(newPost);
-    
-    // Close modal and refresh feed
-    closeCreatePostModal();
-    renderFeed();
-    
-    // Show success feedback
-    alert('Post created successfully! 🎮');
+    try {
+        const response = await fetch(`${API_URL}/posts`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                caption: caption,
+                gameTag: gameTag,
+                image: uploadedImage
+            })
+        });
+        
+        const newPost = await response.json();
+        posts.unshift(newPost);
+        
+        closeCreatePostModal();
+        renderFeed();
+        
+        alert('Post created successfully! 🎮');
+    } catch (error) {
+        console.error('Failed to create post:', error);
+        alert('Failed to create post. Please try again.');
+    }
 }
 
 // ========================================
 // PROFILE
 // ========================================
 
-function renderProfile() {
-    const currentUser = users[0]; // NeonRider is the current user
-    const userPosts = posts.filter(post => post.userId === currentUser.id);
+async function renderProfile() {
+    if (!currentUser) return;
     
+    const userPosts = await loadUserPosts(currentUser.id);
     const container = document.getElementById('profilePostsGrid');
     
     if (userPosts.length === 0) {
         container.innerHTML = `
-            <div class="glass" style="padding: 3rem; text-align: center; border-radius: 16px; grid-column: 1/-1;">
-                <p style="color: var(--text-secondary);">No posts yet. Start sharing your gaming moments!</p>
+            <div class=\\"glass\\" style=\\"padding: 3rem; text-align: center; border-radius: 16px; grid-column: 1/-1;\\">
+                <p style=\\"color: var(--text-secondary);\\">No posts yet. Start sharing your gaming moments!</p>
             </div>
         `;
         return;
     }
     
     container.innerHTML = userPosts.map(post => `
-        <div class="grid-post" data-testid="grid-post-${post.id}">
-            ${post.image ? `<img src="${post.image}" alt="Post">` : `
-                <div style="width: 100%; height: 100%; background: var(--glass-surface); display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
-                    <i class="ph ph-chat-circle" style="font-size: 3rem;"></i>
+        <div class=\\"grid-post\\" data-testid=\\"grid-post-${post.id}\\">
+            ${post.image ? `<img src=\\"${post.image}\\" alt=\\"Post\\">` : `
+                <div style=\\"width: 100%; height: 100%; background: var(--glass-surface); display: flex; align-items: center; justify-content: center; color: var(--text-muted);\\">
+                    <i class=\\"ph ph-chat-circle\\" style=\\"font-size: 3rem;\\"></i>
                 </div>
             `}
-            <div class="grid-post-overlay">
-                <div class="overlay-stat">
-                    <i class="ph-fill ph-heart"></i>
+            <div class=\\"grid-post-overlay\\">
+                <div class=\\"overlay-stat\\">
+                    <i class=\\"ph-fill ph-heart\\"></i>
                     <span>${post.likes}</span>
                 </div>
-                <div class="overlay-stat">
-                    <i class="ph-fill ph-chat-circle"></i>
+                <div class=\\"overlay-stat\\">
+                    <i class=\\"ph-fill ph-chat-circle\\"></i>
                     <span>${post.comments.length}</span>
                 </div>
             </div>
@@ -580,13 +487,13 @@ function renderExplore() {
 function renderNotifications() {
     const container = document.getElementById('notificationsContainer');
     container.innerHTML = notifications.map(notif => `
-        <div class="notif-item" data-testid="notif-item-${notif.id}">
-            <img src="${notif.avatar}" alt="${notif.user}" class="notif-avatar">
-            <div class="notif-content">
-                <div class="notif-text">
+        <div class=\\"notif-item\\" data-testid=\\"notif-item-${notif.id}\\">
+            <img src=\\"${notif.avatar}\\" alt=\\"${notif.user}\\" class=\\"notif-avatar\\">
+            <div class=\\"notif-content\\">
+                <div class=\\"notif-text\\">
                     <strong>${notif.user}</strong> ${notif.text}
                 </div>
-                <div class="notif-time">${notif.time}</div>
+                <div class=\\"notif-time\\">${notif.time}</div>
             </div>
         </div>
     `).join('');
@@ -598,21 +505,4 @@ function openNotifications() {
 
 function closeNotifications() {
     document.getElementById('notificationsPanel').classList.remove('active');
-}
-
-// ========================================
-// UTILITY FUNCTIONS
-// ========================================
-
-// Could be used for future backend integration
-function getCurrentUser() {
-    return users[0];
-}
-
-function getPostById(id) {
-    return posts.find(post => post.id === id);
-}
-
-function getUserById(id) {
-    return users.find(user => user.id === id);
 }
