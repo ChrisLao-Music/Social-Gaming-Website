@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub Social - Gaming Community</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar glass" data-testid="main-navbar">
+        <div class="nav-container">
+            <div class="nav-brand" data-testid="logo">
+                <i class="ph ph-game-controller"></i>
+                <span class="logo-text glow-text">GameHub Social</span>
+            </div>
+            
+            <div class="nav-search" data-testid="search-container">
+                <i class="ph ph-magnifying-glass"></i>
+                <input 
+                    type="text" 
+                    placeholder="Search users or posts..." 
+                    id="searchInput"
+                    data-testid="search-input"
+                >
+            </div>
+            
+            <div class="nav-menu">
+                <button class="nav-item active" data-page="home" data-testid="nav-home">
+                    <i class="ph-fill ph-house"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-item" data-page="explore" data-testid="nav-explore">
+                    <i class="ph ph-compass"></i>
+                    <span>Explore</span>
+                </button>
+                <button class="nav-item" data-page="profile" data-testid="nav-profile">
+                    <i class="ph ph-user"></i>
+                    <span>Profile</span>
+                </button>
+                <button class="nav-item" id="notifBtn" data-testid="nav-notifications">
+                    <i class="ph ph-bell"></i>
+                    <span class="notif-badge" data-testid="notif-badge">3</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Sidebar (Desktop) -->
+        <aside class="sidebar" data-testid="sidebar">
+            <div class="sidebar-section glass">
+                <h3>🔥 Trending Games</h3>
+                <ul class="trending-list" data-testid="trending-games">
+                    <li><span class="game-tag valorant">Valorant</span> <span class="trending-count">1.2k posts</span></li>
+                    <li><span class="game-tag mlbb">MLBB</span> <span class="trending-count">856 posts</span></li>
+                    <li><span class="game-tag cod">COD Mobile</span> <span class="trending-count">743 posts</span></li>
+                    <li><span class="game-tag lol">League of Legends</span> <span class="trending-count">612 posts</span></li>
+                    <li><span class="game-tag apex">Apex Legends</span> <span class="trending-count">489 posts</span></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section glass">
+                <h3>💡 Quick Tips</h3>
+                <p class="tip-text">Share your gaming moments with the community!</p>
+            </div>
+        </aside>
+
+        <!-- Feed Section -->
+        <section class="feed-section" id="feedSection" data-testid="feed-section">
+            <!-- Game Filter Pills -->
+            <div class="filter-pills" data-testid="filter-pills">
+                <button class="pill active" data-filter="all" data-testid="filter-all">All</button>
+                <button class="pill" data-filter="Valorant" data-testid="filter-valorant">Valorant</button>
+                <button class="pill" data-filter="MLBB" data-testid="filter-mlbb">MLBB</button>
+                <button class="pill" data-filter="COD Mobile" data-testid="filter-cod">COD Mobile</button>
+                <button class="pill" data-filter="League of Legends" data-testid="filter-lol">LoL</button>
+                <button class="pill" data-filter="Apex Legends" data-testid="filter-apex">Apex</button>
+            </div>
+            
+            <!-- Posts will be injected here -->
+            <div id="postsContainer" data-testid="posts-container"></div>
+        </section>
+
+        <!-- Profile Section (Hidden by default) -->
+        <section class="profile-section" id="profileSection" style="display: none;" data-testid="profile-section">
+            <div class="profile-header glass">
+                <div class="profile-banner" data-testid="profile-banner">
+                    <img src="https://images.unsplash.com/photo-1728330458318-70438beffc44" alt="Banner">
+                </div>
+                <div class="profile-info">
+                    <img src="https://images.unsplash.com/photo-1684488646170-62c5403733e4" alt="Avatar" class="profile-avatar" data-testid="profile-avatar">
+                    <div class="profile-details">
+                        <h2 class="glow-text" data-testid="profile-username">NeonRider</h2>
+                        <p class="profile-handle" data-testid="profile-handle">@neon_rider</p>
+                        <p class="profile-bio" data-testid="profile-bio">🎮 Pro Gamer | 🔥 Esports Enthusiast | 💜 Valorant Main</p>
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <span class="stat-value" data-testid="profile-followers">2.4k</span>
+                                <span class="stat-label">Followers</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" data-testid="profile-following">318</span>
+                                <span class="stat-label">Following</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" data-testid="profile-posts">127</span>
+                                <span class="stat-label">Posts</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-posts-grid" id="profilePostsGrid" data-testid="profile-posts-grid">
+                <!-- User posts grid will be injected here -->
+            </div>
+        </section>
+
+        <!-- Explore Section (Hidden by default) -->
+        <section class="explore-section" id="exploreSection" style="display: none;" data-testid="explore-section">
+            <h2 class="section-title glow-text">🔍 Explore Community</h2>
+            <div class="explore-grid" id="exploreGrid" data-testid="explore-grid">
+                <!-- All posts in grid format -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Create Post Button -->
+    <button class="fab glow-box" id="createPostBtn" data-testid="create-post-btn">
+        <i class="ph-bold ph-plus"></i>
+    </button>
+
+    <!-- Create Post Modal -->
+    <div class="modal-overlay" id="createPostModal" data-testid="create-post-modal">
+        <div class="modal glass">
+            <div class="modal-header">
+                <h3 class="glow-text">Create Post</h3>
+                <button class="modal-close" data-testid="modal-close">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <textarea 
+                    id="postCaption" 
+                    placeholder="Share your gaming moment..." 
+                    rows="4"
+                    data-testid="post-caption-input"
+                ></textarea>
+                
+                <select id="gameTagSelect" data-testid="game-tag-select">
+                    <option value="">Select Game</option>
+                    <option value="Valorant">Valorant</option>
+                    <option value="MLBB">Mobile Legends: Bang Bang</option>
+                    <option value="COD Mobile">Call of Duty Mobile</option>
+                    <option value="League of Legends">League of Legends</option>
+                    <option value="Apex Legends">Apex Legends</option>
+                    <option value="Fortnite">Fortnite</option>
+                    <option value="Overwatch">Overwatch 2</option>
+                    <option value="CS:GO">CS:GO</option>
+                </select>
+                
+                <div class="image-upload-section">
+                    <label for="imageUpload" class="upload-label" data-testid="upload-label">
+                        <i class="ph ph-image"></i>
+                        <span>Add Image</span>
+                    </label>
+                    <input 
+                        type="file" 
+                        id="imageUpload" 
+                        accept="image/*" 
+                        style="display: none;"
+                        data-testid="image-upload-input"
+                    >
+                    <div id="imagePreview" class="image-preview" data-testid="image-preview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPostBtn" data-testid="cancel-post-btn">Cancel</button>
+                <button class="btn-primary glow-box" id="submitPostBtn" data-testid="submit-post-btn">Post</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div class="notifications-panel" id="notificationsPanel" data-testid="notifications-panel">
+        <div class="panel-header">
+            <h3 class="glow-text">Notifications</h3>
+            <button class="panel-close" id="closeNotifBtn" data-testid="close-notif-btn">
+                <i class="ph-bold ph-x"></i>
+            </button>
+        </div>
+        <div class="panel-body" id="notificationsContainer" data-testid="notifications-container">
+            <!-- Notifications will be injected here -->
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="script.js"></script>
+</body>
+</html>
